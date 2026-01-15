@@ -1,13 +1,11 @@
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export async function api(path, options = {}) {
-  const token = localStorage.getItem("token");
-
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
+    credentials: "include", // ✅ send/receive cookies
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   });
@@ -16,8 +14,7 @@ export async function api(path, options = {}) {
   const data = isJson ? await res.json() : null;
 
   if (!res.ok) {
-    throw new Error(data?.error || data?.message || `Request failed (${res.status})`);
+    throw new Error(data?.msg || data?.error || data?.message || `Request failed (${res.status})`);
   }
-
   return data;
 }
