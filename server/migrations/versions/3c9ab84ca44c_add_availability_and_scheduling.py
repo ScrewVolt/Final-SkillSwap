@@ -7,6 +7,8 @@ Create Date: 2026-01-13 22:36:48.330384
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
+
 
 
 # revision identifiers, used by Alembic.
@@ -19,12 +21,8 @@ def _column_exists(conn, table_name, column_name):
     rows = conn.execute(sa.text(f"PRAGMA table_info({table_name})")).fetchall()
     return any(r[1] == column_name for r in rows)
 
-def _table_exists(conn, table_name):
-    row = conn.execute(
-        sa.text("SELECT name FROM sqlite_master WHERE type='table' AND name=:t"),
-        {"t": table_name},
-    ).fetchone()
-    return row is not None
+def _table_exists(conn, table_name: str) -> bool:
+    return inspect(conn).has_table(table_name)
 
 def upgrade():
     conn = op.get_bind()
