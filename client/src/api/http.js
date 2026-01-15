@@ -1,33 +1,20 @@
-const API_BASE = "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export async function api(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: "include",
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...options,
     headers: {
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      "Content-Type": "application/json",
       ...(options.headers || {}),
     },
-    ...options,
+    credentials: "include", // keep ONLY if you're using cookies
   });
 
-  // Always read text first, then try JSON
-  const text = await res.text();
-  let data = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
-  }
+  const isJson = res.headers.get("content-type")?.includes("application/json");
+  const data = isJson ? await res.json() : null;
 
   if (!res.ok) {
-    // Your global handler returns: { error, message, status }
-    const msg =
-      (data && (data.message || data.error || data.msg)) ||
-      `Request failed (${res.status})`;
-
-    if (res.status === 401) {
-      throw new Error("Session expired. Please log in again.");
-    }
+    const msg = data?.error || data?.message || `Request failed (${res.status})`;
     throw new Error(msg);
   }
 
