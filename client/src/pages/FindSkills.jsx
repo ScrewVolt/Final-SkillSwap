@@ -113,39 +113,33 @@ export default function FindSkills() {
     [qDebounced, type, tags, page]
   );
 
-  // Load skills list
-  useEffect(() => {
-    const controller = new AbortController();
+ // Load skills list
+useEffect(() => {
+  const controller = new AbortController();
 
-    async function load() {
-      setStatus("loading");
-      setErrorMsg("");
+  async function load() {
+    setStatus("loading");
+    setErrorMsg("");
 
-      try {
-        const res = await fetch(`/api/skills?${queryString}`, {
-          credentials: "include",
-          signal: controller.signal,
-        });
+    try {
+      const data = await api(`/api/skills?${queryString}`, {
+        signal: controller.signal,
+      });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data?.error || data?.message || "Failed to load skills");
-        }
-
-        setRows(data.data || []);
-        setMeta(data.meta || { page: 1, pageSize, total: 0, totalPages: 1 });
-        setStatus("idle");
-      } catch (e) {
-        if (e.name === "AbortError") return;
-        setStatus("error");
-        setErrorMsg(e.message);
-      }
+      setRows(data?.data || []);
+      setMeta(data?.meta || { page: 1, pageSize, total: 0, totalPages: 1 });
+      setStatus("idle");
+    } catch (e) {
+      if (e?.name === "AbortError") return;
+      setStatus("error");
+      setErrorMsg(e.message);
     }
+  }
 
-    load();
-    return () => controller.abort();
-  }, [queryString]);
+  load();
+  return () => controller.abort();
+}, [queryString]);
+
 
   const canPrev = meta.page > 1;
   const canNext = meta.page < meta.totalPages;
